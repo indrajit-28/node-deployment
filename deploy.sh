@@ -22,15 +22,18 @@ if [[ "$HAS_GIT_REPO" == "yes" ]]; then
     
     echo "Cloning repository..."
     if [ ! -d "$APP_DIR" ]; then
-        git clone -b "$BRANCH" "$GIT_REPO" "$APP_DIR"
+        sudo git clone -b "$BRANCH" "$GIT_REPO" "$APP_DIR"
     else
         echo "Directory already exists. Pulling latest changes..."
         cd "$APP_DIR"
-        git pull origin "$BRANCH"
+        sudo git pull origin "$BRANCH"
     fi
 else
     APP_DIR=$(read_input "Enter the absolute path of your existing project directory")
 fi
+
+NODE_VERSION=$(read_input "Enter the Node.js version you want to install (default: 18.16.0)")
+NODE_VERSION=${NODE_VERSION:-18.16.0}
 
 echo "Updating system packages..."
 sudo apt update && sudo apt upgrade -y
@@ -58,6 +61,9 @@ nvm install "$NODE_VERSION"
 nvm use "$NODE_VERSION"
 nvm alias default "$NODE_VERSION"
 
+# Change ownership of project directory (prevents permission issues)
+sudo chown -R "$USER:$USER" "$APP_DIR"
+
 # Navigate to project directory
 cd "$APP_DIR"
 
@@ -69,9 +75,9 @@ if [ -d "client" ] && [ -d "server" ]; then
     echo "Setting up backend..."
     cd server
     if [ -f "package.json" ]; then
-        npm install
+        sudo npm install
         echo "Starting backend server..."
-        npm start &
+        sudo npm start &
     fi
     cd ..
 
@@ -79,8 +85,8 @@ if [ -d "client" ] && [ -d "server" ]; then
     echo "Setting up frontend..."
     cd client
     if [ -f "package.json" ]; then
-        npm install
-        npm run build
+        sudo npm install
+        sudo npm run build
         echo "Frontend build completed."
     fi
     cd ..
@@ -89,9 +95,9 @@ elif [ -d "server" ]; then
     echo "Only backend detected."
     cd server
     if [ -f "package.json" ]; then
-        npm install
+        sudo npm install
         echo "Starting backend server..."
-        npm start &
+        sudo npm start &
     fi
     cd ..
 
@@ -99,8 +105,8 @@ elif [ -d "client" ]; then
     echo "Only frontend detected."
     cd client
     if [ -f "package.json" ]; then
-        npm install
-        npm run build
+        sudo npm install
+        sudo npm run build
         echo "Frontend build completed."
     fi
     cd ..
@@ -110,9 +116,9 @@ else
     
     if [ -f "package.json" ]; then
         echo "package.json found in root directory."
-        npm install
-        npm run build || echo "Skipping build step."
-        npm start &
+        sudo npm install
+        sudo npm run build || echo "Skipping build step."
+        sudo npm start &
     else
         echo "No package.json found, skipping setup."
     fi
